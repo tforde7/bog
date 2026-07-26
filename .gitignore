@@ -1,0 +1,11 @@
+# Original data downloads are reproducible from docs/data_sources.csv.
+data/raw/
+
+# QGIS and GeoPackage runtime artefacts.
+*.qgz~
+*.qgs~
+*.gpkg-wal
+*.gpkg-shm
+
+# Keep the locally supplied reference report out of the public project repository.
+BBRP23_Prioritisation_of_Blanket_bog_(WP5)Final20.05..2025 (003).pdf
