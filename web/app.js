@@ -175,29 +175,12 @@ function populateCountyFilter() {
   elements.countySelect.append(...options);
 }
 
-function popupMarkup(candidate) {
-  return `
-    <div class="map-popup">
-      <div class="map-popup__rank">Candidate ${candidate.rank}</div>
-      <div class="map-popup__title">${candidate.county}</div>
-      <div class="map-popup__meta">
-        ${hectares.format(candidate.bogGeomHa)} ha screened bog ·
-        ${hectares.format(candidate.clearBogHa)} ha clear of mapped commonage/private forest
-      </div>
-    </div>
-  `;
-}
-
 function buildMapLayer(geojson) {
   candidateLayer = L.geoJSON(geojson, {
     renderer: canvasRenderer,
     style: baseStyle,
     onEachFeature(feature, layer) {
       const rank = Number(feature.properties.rank);
-      layer.bindPopup(popupMarkup(state.candidates[rank - 1]), {
-        closeButton: false,
-        offset: [0, -4],
-      });
       layer.on("click", () => selectCandidate(rank, { source: "map" }));
       layer.featureRank = rank;
     },
@@ -401,7 +384,6 @@ function selectCandidate(rank, { source = "list", updateHash = true } = {}) {
       maxZoom: 15,
       padding: [35, 35],
     });
-    if (state.boundariesVisible) state.selectedLayer.openPopup();
   }
 
   const targetPage = pageForCandidate(candidate.rank);

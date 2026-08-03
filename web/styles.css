@@ -838,35 +838,6 @@ td:nth-child(2) {
   color: var(--peat-700) !important;
 }
 
-.leaflet-popup-content-wrapper {
-  border-radius: 0;
-  box-shadow: 0 12px 35px rgba(11, 36, 31, 0.22);
-}
-
-.leaflet-popup-content {
-  font-family: var(--body);
-  margin: 0.9rem 1rem;
-}
-
-.map-popup__rank {
-  color: var(--amber-dark);
-  font-size: 0.62rem;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-
-.map-popup__title {
-  font-family: var(--display);
-  font-size: 1.2rem;
-  margin: 0.25rem 0;
-}
-
-.map-popup__meta {
-  color: var(--muted);
-  font-size: 0.68rem;
-}
-
 @media (max-width: 1180px) {
   .masthead__body {
     grid-template-columns: 1fr;
