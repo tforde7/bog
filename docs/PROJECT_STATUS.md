@@ -33,6 +33,7 @@ Key project rules agreed so far:
 | LPIS 2025 parcels | `data/raw/GEO_860-PARCELS_GPK.gpkg` | Large national farmland-parcel dataset. Not yet subtracted. |
 | NPWS Commonage GIS Dataset | `data/raw/npws_commonage_2012.zip` | Historic Commonage Framework Plan screening geometry; not definitive current legal-title evidence. |
 | DAFM Private Forest Estate 2025 | `data/raw/dafm_private_forest_estate_2025.zip` | Current mapped private-forest screening layer; may not include every wooded area or all public forest. |
+| OpenStreetMap Ireland and Northern Ireland extract, 2026-08-02 | `data/raw/osm_ireland_northern_ireland_2026-08-02.osm.pbf` | Dated vehicle-road and land-access-track proximity source; crowdsourced coverage is not proof of usable or legal access. |
 | Tailte freehold cadastral parcels | `data/raw/Cadastral_Parcels_Freehold_-4388988690564004250.gpkg` | 2.0 GB, 3,086,691 titles, EPSG:2157, spatially indexed. Main cadastral framework. |
 | Tailte leasehold cadastral parcels | `data/raw/Cadastral_Parcels_Leasehold_-3465714256390258246.gpkg` | 48 MB, 131,073 titles, EPSG:2157, spatially indexed. Flag/tenure-complication overlay, not an exclusion. |
 | Tailte townlands | `data/raw/tailte_townlands_2019_generalised20m.gpkg` | Context/aggregation only; not an ownership parcel layer. |
@@ -291,6 +292,40 @@ The output contains one 295-feature metrics layer plus candidate-specific
 commonage and forestry overlay layers clipped to the full title. These are
 screening indicators, not legal commonage determinations or complete
 tree-cover mapping.
+
+## Access-score screening
+
+`scripts/08a_calculate_candidate_access_scores.py` completed successfully for
+all 295 final candidates using the dated 2026-08-02 Geofabrik OpenStreetMap
+Ireland and Northern Ireland extract. It rebuilt each candidate's clear-bog
+geometry and measured proximity to eligible mapped vehicle roads and
+land-access tracks.
+
+Validated result:
+
+- candidates assessed: **295**;
+- candidates containing at least 0.01 ha of clear bog and assessed for access:
+  **284**;
+- Good (at most 1,000 m), score 3: **284**;
+- Moderate (more than 1,000 m to 2,000 m), score 2: **0**;
+- Poor (more than 2,000 m), score 1: **0**;
+- not assessed because clear bog was below 0.01 ha: **11**;
+- eligible OSM road/track lines scanned: **1,281,881**;
+- OSM lines retained near candidates: **33,471**;
+- candidates whose nearest mapped access line was a track: **130**;
+- measured nearest-line distance range: **0.0–754.1 m**;
+- summed rebuilt clear bog: **26,235.42 ha**;
+- runtime: **97.4 seconds**;
+- output: `data/processed/08a_candidate_access_scores.gpkg`.
+
+The coarse OSM proximity test is conclusive but non-discriminatory for this
+candidate set: every candidate with meaningful clear bog received the same
+Good score. The access score is therefore recorded as completed due diligence
+but is not used in the current ranking and has not been added to the atlas.
+
+OSM proximity does not establish road or track condition, legal access, a
+usable site entrance, or permission to cross intervening land. Those questions
+remain part of candidate-specific desktop review and field due diligence.
 
 A final candidate workbook has also been produced:
 
