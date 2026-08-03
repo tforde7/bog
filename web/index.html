@@ -99,11 +99,41 @@
               <span aria-hidden="true"></span>
               Boundaries
             </label>
+            <div class="map-switcher__evidence" aria-label="Selected candidate overlays">
+              <label
+                class="evidence-toggle evidence-toggle--commonage"
+                id="commonage-toggle-label"
+                title="Select a candidate with mapped commonage"
+              >
+                <input id="commonage-toggle" type="checkbox" disabled />
+                <span aria-hidden="true"></span>
+                Commonage
+              </label>
+              <label
+                class="evidence-toggle evidence-toggle--forestry"
+                id="forestry-toggle-label"
+                title="Select a candidate with mapped private forest"
+              >
+                <input id="forestry-toggle" type="checkbox" disabled />
+                <span aria-hidden="true"></span>
+                Forestry
+              </label>
+            </div>
           </div>
 
           <div class="map-legend" aria-hidden="true">
-            <span></span>
-            Candidate title
+            <div class="map-legend__item">
+              <span class="map-legend__candidate"></span>
+              Candidate title
+            </div>
+            <div class="map-legend__item" id="commonage-legend" hidden>
+              <span class="map-legend__commonage"></span>
+              Commonage
+            </div>
+            <div class="map-legend__item" id="forestry-legend" hidden>
+              <span class="map-legend__forestry"></span>
+              Private forest
+            </div>
           </div>
 
           <div class="map-status" id="map-status" role="status">
@@ -161,6 +191,12 @@
                 <th scope="col">Title</th>
                 <th scope="col">Screened bog</th>
                 <th scope="col">Low slope</th>
+                <th
+                  scope="col"
+                  title="Screened bog outside mapped commonage and DAFM private forest"
+                >
+                  Clear bog
+                </th>
               </tr>
             </thead>
             <tbody id="candidate-table-body"></tbody>
@@ -192,7 +228,9 @@
           target="_blank"
           rel="noreferrer"
           >CC BY 4.0</a
-        >.
+        >. Commonage screening uses LPIS 2025 and NPWS Commonage Framework
+        Plan geometry; forestry screening uses the DAFM Private Forest Estate
+        2025. These overlays are screening evidence, not legal determinations.
       </p>
       <p>
         <a

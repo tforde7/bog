@@ -1,6 +1,6 @@
 # Bog restoration candidate screening — project status
 
-Last updated: 2026-08-02
+Last updated: 2026-08-03
 
 ## Objective
 
@@ -31,6 +31,8 @@ Key project rules agreed so far:
 | NPWS NHA 2019 | `data/raw/npws_nha_itm_2019_06.zip` | Designation screen; refresh before publication. |
 | LDA/PRA State Assets Feature Services | loaded by `04a` | Known State-land evidence only; not a complete public/private ownership dataset. |
 | LPIS 2025 parcels | `data/raw/GEO_860-PARCELS_GPK.gpkg` | Large national farmland-parcel dataset. Not yet subtracted. |
+| NPWS Commonage GIS Dataset | `data/raw/npws_commonage_2012.zip` | Historic Commonage Framework Plan screening geometry; not definitive current legal-title evidence. |
+| DAFM Private Forest Estate 2025 | `data/raw/dafm_private_forest_estate_2025.zip` | Current mapped private-forest screening layer; may not include every wooded area or all public forest. |
 | Tailte freehold cadastral parcels | `data/raw/Cadastral_Parcels_Freehold_-4388988690564004250.gpkg` | 2.0 GB, 3,086,691 titles, EPSG:2157, spatially indexed. Main cadastral framework. |
 | Tailte leasehold cadastral parcels | `data/raw/Cadastral_Parcels_Leasehold_-3465714256390258246.gpkg` | 48 MB, 131,073 titles, EPSG:2157, spatially indexed. Flag/tenure-complication overlay, not an exclusion. |
 | Tailte townlands | `data/raw/tailte_townlands_2019_generalised20m.gpkg` | Context/aggregation only; not an ownership parcel layer. |
@@ -254,6 +256,42 @@ pass/threshold mismatches, no area-balance mismatches, and spatial indexes on
 both outputs. The slope result remains a 30 m Copernicus DSM screening estimate,
 not a survey or engineering measurement.
 
+## Commonage and private-forestry screening
+
+`scripts/07a_calculate_candidate_commonage_forestry.py` completed successfully
+for all 295 final candidates. It combines:
+
+- the current LPIS 2025 `commonage_ind = 'Y'` parcels;
+- the historic NPWS Commonage Framework Plan geometry; and
+- the DAFM Private Forest Estate 2025.
+
+The LPIS and historic commonage geometries are unioned so their overlap is not
+double counted. Commonage and forestry are also unioned within each candidate's
+screened-bog footprint before calculating:
+
+`clear_bog_ha = screened bog outside mapped commonage/private forest`
+
+Validated result:
+
+- candidates assessed: **295**;
+- candidates overlapping LPIS commonage: **182**;
+- candidates overlapping historic commonage: **191**;
+- candidates overlapping either commonage source: **194**;
+- candidates overlapping DAFM private forest: **124**;
+- summed screened-bog footprint: **62,024.42 ha**;
+- commonage within screened bog: **30,264.28 ha**;
+- private forest within screened bog: **5,645.83 ha**;
+- union of commonage/private forest within screened bog: **35,789.04 ha**;
+- screened bog outside that union: **26,235.38 ha**;
+- per-candidate clear-bog range: **0.00–651.13 ha**;
+- runtime: **43.7 seconds**;
+- output: `data/processed/07a_candidate_commonage_forestry.gpkg`.
+
+The output contains one 295-feature metrics layer plus candidate-specific
+commonage and forestry overlay layers clipped to the full title. These are
+screening indicators, not legal commonage determinations or complete
+tree-cover mapping.
+
 A final candidate workbook has also been produced:
 
 - `outputs/019fc366-ff97-7953-b9b9-1443ffdd34a8/final_candidate_list_ranked.xlsx`;
@@ -274,17 +312,24 @@ A static candidate atlas has been prepared in `web/` for GitHub Pages:
 - the list supports county/text filtering, keyboard selection, and pagination;
 - selecting a row or boundary centres the map on the exact title geometry and
   highlights it;
+- after selecting a candidate, Commonage and Forestry controls become
+  available only when the corresponding mapped overlap exists;
+- the selected candidate's commonage and private-forest portions can be
+  switched independently on and off;
+- the register and selection summary include `clear_bog_ha`, the screened-bog
+  area outside the mapped commonage/private-forest union;
 - all full-detail title boundaries are exported to RFC 7946 GeoJSON in WGS 84
   by `scripts/06_export_candidate_web_data.sh`;
 - the candidate boundary layer can be switched on and off and remains
   geographically aligned at every map zoom;
 - OpenStreetMap and Esri World Imagery basemaps are available without a project
   API key;
-- the generated web GeoJSON contains **295** unique ranks and only
-  `MultiPolygon` geometries, and is approximately **4.4 MB**;
-- desktop and mobile browser checks passed for loading, selection, deep links,
-  filtering, pagination, boundary visibility, satellite switching, and browser
-  console errors;
+- the generated candidate GeoJSON contains **295** unique ranks and only
+  `MultiPolygon` geometries; separate GeoJSON layers contain **194** commonage
+  and **124** forestry overlays;
+- desktop and mobile browser checks passed for loading, selection, conditional
+  overlay availability, independent overlay switching, clear-bog display,
+  boundary visibility, satellite switching, and browser console errors;
 - `.github/workflows/pages.yml` publishes the `web/` directory to GitHub Pages.
 
 Candidate sources:
@@ -335,4 +380,6 @@ The persistent 04b and future 04b1/04f GeoPackages can then be added directly th
 
 - The complete screening-workflow checkpoint was committed and pushed as
   `4ff221d` (`Checkpoint candidate screening workflow`).
+- The complete raw-data source-register checkpoint was committed and pushed as
+  `c4c1d38` (`Complete raw data source register`) before step 07a began.
 - Preserve raw downloaded national data outside Git unless an explicit large-file-data policy is adopted.

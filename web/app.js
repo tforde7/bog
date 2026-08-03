@@ -1,5 +1,7 @@
 const PAGE_SIZE = 25;
 const DATA_URL = "./data/candidates.geojson";
+const COMMONAGE_DATA_URL = "./data/candidate_commonage.geojson";
+const FORESTRY_DATA_URL = "./data/candidate_forestry.geojson";
 const number = new Intl.NumberFormat("en-IE", {
   maximumFractionDigits: 0,
 });
@@ -19,6 +21,10 @@ const state = {
   selectedRank: null,
   selectedLayer: null,
   boundariesVisible: true,
+  commonageBySource: new Map(),
+  forestryBySource: new Map(),
+  commonageLayer: null,
+  forestryLayer: null,
 };
 
 const elements = {
@@ -32,6 +38,12 @@ const elements = {
   emptyResults: document.querySelector("#empty-results"),
   clearFilters: document.querySelector("#clear-filters"),
   boundaryToggle: document.querySelector("#boundary-toggle"),
+  commonageToggle: document.querySelector("#commonage-toggle"),
+  commonageToggleLabel: document.querySelector("#commonage-toggle-label"),
+  forestryToggle: document.querySelector("#forestry-toggle"),
+  forestryToggleLabel: document.querySelector("#forestry-toggle-label"),
+  commonageLegend: document.querySelector("#commonage-legend"),
+  forestryLegend: document.querySelector("#forestry-legend"),
   resetMap: document.querySelector("#reset-map"),
   mapStatus: document.querySelector("#map-status"),
   selectionCard: document.querySelector("#selection-card"),
@@ -93,11 +105,36 @@ function selectedStyle() {
   };
 }
 
+function commonageStyle() {
+  return {
+    renderer: canvasRenderer,
+    color: "#4f2458",
+    weight: map.getZoom() >= 13 ? 2.2 : 1.4,
+    opacity: 1,
+    fillColor: "#9b6aa6",
+    fillOpacity: 0.58,
+    smoothFactor: 0.25,
+  };
+}
+
+function forestryStyle() {
+  return {
+    renderer: canvasRenderer,
+    color: "#17482a",
+    weight: map.getZoom() >= 13 ? 2.2 : 1.4,
+    opacity: 1,
+    fillColor: "#2f7d4a",
+    fillOpacity: 0.62,
+    smoothFactor: 0.25,
+  };
+}
+
 function candidateFromFeature(feature) {
   const properties = feature.properties;
   return {
     feature,
     rank: Number(properties.rank),
+    sourceFid: Number(properties.source_fid),
     county: properties.county,
     easting: Number(properties.itm_easting),
     northing: Number(properties.itm_northing),
@@ -106,6 +143,13 @@ function candidateFromFeature(feature) {
     bogPct: Number(properties.bog_pct),
     bogGeomHa: Number(properties.bog_geom_ha),
     lowSlopePct: Number(properties.low15_pct),
+    clearBogHa: Number(properties.clear_bog_ha),
+    commonageTitleHa: Number(properties.common_title_ha),
+    commonageBogHa: Number(properties.common_bog_ha),
+    forestryTitleHa: Number(properties.forest_title_ha),
+    forestryBogHa: Number(properties.forest_bog_ha),
+    commonageFlag: Number(properties.common_flag) === 1,
+    forestryFlag: Number(properties.forest_flag) === 1,
     searchText: [
       properties.rank,
       properties.county,
@@ -137,7 +181,7 @@ function popupMarkup(candidate) {
       <div class="map-popup__title">${candidate.county}</div>
       <div class="map-popup__meta">
         ${hectares.format(candidate.bogGeomHa)} ha screened bog ·
-        ${percent.format(candidate.lowSlopePct)}% at 0–15% slope
+        ${hectares.format(candidate.clearBogHa)} ha clear of mapped commonage/private forest
       </div>
     </div>
   `;
@@ -182,6 +226,7 @@ function renderTable() {
         <td>${hectares.format(candidate.titleHa)} ha</td>
         <td class="metric-primary">${hectares.format(candidate.bogGeomHa)} ha</td>
         <td>${percent.format(candidate.lowSlopePct)}%</td>
+        <td class="metric-clear">${hectares.format(candidate.clearBogHa)} ha</td>
       `;
       row.addEventListener("click", () =>
         selectCandidate(candidate.rank, { source: "list" }),
@@ -228,6 +273,72 @@ function layerForRank(rank) {
   return match;
 }
 
+function removeEvidenceLayer(kind) {
+  const layerKey = `${kind}Layer`;
+  const layer = state[layerKey];
+  if (layer && map.hasLayer(layer)) map.removeLayer(layer);
+  state[layerKey] = null;
+  elements[`${kind}Legend`].hidden = true;
+}
+
+function clearEvidenceLayers() {
+  removeEvidenceLayer("commonage");
+  removeEvidenceLayer("forestry");
+  elements.commonageToggle.checked = false;
+  elements.forestryToggle.checked = false;
+}
+
+function configureEvidenceToggle(kind, candidate) {
+  const isCommonage = kind === "commonage";
+  const toggle = elements[`${kind}Toggle`];
+  const label = elements[`${kind}ToggleLabel`];
+  const featureMap = state[`${kind}BySource`];
+  const flagged = isCommonage
+    ? candidate.commonageFlag
+    : candidate.forestryFlag;
+  const available = flagged && featureMap.has(candidate.sourceFid);
+  const titleArea = isCommonage
+    ? candidate.commonageTitleHa
+    : candidate.forestryTitleHa;
+  const bogArea = isCommonage
+    ? candidate.commonageBogHa
+    : candidate.forestryBogHa;
+  const name = isCommonage ? "commonage" : "private forest";
+
+  toggle.disabled = !available;
+  toggle.checked = false;
+  label.classList.toggle("is-available", available);
+  label.title = available
+    ? `Show ${hectares.format(titleArea)} ha mapped ${name} within this title (${hectares.format(bogArea)} ha within screened bog)`
+    : `No mapped ${name} overlap for this candidate`;
+}
+
+function updateEvidenceControls(candidate) {
+  clearEvidenceLayers();
+  configureEvidenceToggle("commonage", candidate);
+  configureEvidenceToggle("forestry", candidate);
+}
+
+function setEvidenceOverlay(kind, visible) {
+  removeEvidenceLayer(kind);
+  if (!visible || !state.selectedRank) return;
+
+  const candidate = state.candidates.find(
+    (item) => item.rank === state.selectedRank,
+  );
+  if (!candidate) return;
+  const feature = state[`${kind}BySource`].get(candidate.sourceFid);
+  if (!feature) return;
+
+  const layer = L.geoJSON(feature, {
+    renderer: canvasRenderer,
+    style: kind === "commonage" ? commonageStyle : forestryStyle,
+    interactive: false,
+  }).addTo(map);
+  state[`${kind}Layer`] = layer;
+  elements[`${kind}Legend`].hidden = false;
+}
+
 function updateSelectionCard(candidate) {
   elements.selectionCard.innerHTML = `
     <div class="selection-card__content">
@@ -247,6 +358,10 @@ function updateSelectionCard(candidate) {
       <div class="selection-card__metric">
         <span>Low slope</span>
         <strong>${percent.format(candidate.lowSlopePct)}%</strong>
+      </div>
+      <div class="selection-card__metric selection-card__metric--clear">
+        <span>Clear bog</span>
+        <strong>${hectares.format(candidate.clearBogHa)} ha</strong>
       </div>
       <div class="selection-card__actions">
         <button type="button" id="copy-coordinates">Copy coordinates</button>
@@ -301,11 +416,22 @@ function selectCandidate(rank, { source = "list", updateHash = true } = {}) {
     }
   }
 
+  updateEvidenceControls(candidate);
   updateSelectionCard(candidate);
   if (updateHash) history.replaceState(null, "", `#candidate-${candidate.rank}`);
 }
 
 function resetSelection() {
+  clearEvidenceLayers();
+  for (const kind of ["commonage", "forestry"]) {
+    const toggle = elements[`${kind}Toggle`];
+    const label = elements[`${kind}ToggleLabel`];
+    toggle.disabled = true;
+    label.classList.remove("is-available");
+    label.title = `Select a candidate with mapped ${
+      kind === "commonage" ? "commonage" : "private forest"
+    }`;
+  }
   if (state.selectedLayer) state.selectedLayer.setStyle(baseStyle());
   state.selectedLayer = null;
   state.selectedRank = null;
@@ -328,6 +454,8 @@ function setBasemap(name) {
     streetLayer.addTo(map);
   }
   if (candidateLayer && state.boundariesVisible) candidateLayer.bringToFront();
+  state.commonageLayer?.bringToFront();
+  state.forestryLayer?.bringToFront();
   elements.basemapButtons.forEach((button) => {
     const active = button.dataset.basemap === name;
     button.classList.toggle("is-active", active);
@@ -354,9 +482,20 @@ function bindControls() {
   });
   elements.boundaryToggle.addEventListener("change", (event) => {
     state.boundariesVisible = event.currentTarget.checked;
-    if (state.boundariesVisible) candidateLayer.addTo(map);
-    else candidateLayer.removeFrom(map);
+    if (state.boundariesVisible) {
+      candidateLayer.addTo(map);
+      state.commonageLayer?.bringToFront();
+      state.forestryLayer?.bringToFront();
+    } else {
+      candidateLayer.removeFrom(map);
+    }
   });
+  elements.commonageToggle.addEventListener("change", (event) =>
+    setEvidenceOverlay("commonage", event.currentTarget.checked),
+  );
+  elements.forestryToggle.addEventListener("change", (event) =>
+    setEvidenceOverlay("forestry", event.currentTarget.checked),
+  );
   elements.resetMap.addEventListener("click", () => {
     resetSelection();
     map.fitBounds(allBounds, { padding: [22, 22] });
@@ -372,18 +511,68 @@ function bindControls() {
         ? selectedStyle()
         : baseStyle(),
     );
+    state.commonageLayer?.setStyle(commonageStyle());
+    state.forestryLayer?.setStyle(forestryStyle());
   });
+}
+
+async function fetchGeoJson(url, label) {
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`${label} data returned ${response.status}.`);
+  return response.json();
+}
+
+function featuresBySource(geojson, label) {
+  const features = new Map();
+  geojson.features.forEach((feature) => {
+    const sourceFid = Number(feature.properties.source_fid);
+    if (!Number.isFinite(sourceFid)) {
+      throw new Error(`${label} contains a feature without a valid source_fid.`);
+    }
+    if (features.has(sourceFid)) {
+      throw new Error(`${label} contains duplicate source_fid ${sourceFid}.`);
+    }
+    features.set(sourceFid, feature);
+  });
+  return features;
 }
 
 async function initialise() {
   try {
-    const response = await fetch(DATA_URL);
-    if (!response.ok) throw new Error(`Candidate data returned ${response.status}.`);
-    const geojson = await response.json();
+    const [geojson, commonageGeojson, forestryGeojson] = await Promise.all([
+      fetchGeoJson(DATA_URL, "Candidate"),
+      fetchGeoJson(COMMONAGE_DATA_URL, "Commonage overlay"),
+      fetchGeoJson(FORESTRY_DATA_URL, "Forestry overlay"),
+    ]);
+    state.commonageBySource = featuresBySource(
+      commonageGeojson,
+      "Commonage overlay",
+    );
+    state.forestryBySource = featuresBySource(
+      forestryGeojson,
+      "Forestry overlay",
+    );
     state.candidates = geojson.features
       .map(candidateFromFeature)
       .sort((a, b) => a.rank - b.rank);
     state.filtered = [...state.candidates];
+
+    const commonageFlags = state.candidates.filter(
+      (candidate) => candidate.commonageFlag,
+    ).length;
+    const forestryFlags = state.candidates.filter(
+      (candidate) => candidate.forestryFlag,
+    ).length;
+    if (commonageFlags !== state.commonageBySource.size) {
+      throw new Error(
+        `Commonage flag/overlay mismatch: ${commonageFlags} flags and ${state.commonageBySource.size} overlays.`,
+      );
+    }
+    if (forestryFlags !== state.forestryBySource.size) {
+      throw new Error(
+        `Forestry flag/overlay mismatch: ${forestryFlags} flags and ${state.forestryBySource.size} overlays.`,
+      );
+    }
 
     populateCountyFilter();
     buildMapLayer(geojson);
