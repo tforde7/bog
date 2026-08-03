@@ -399,6 +399,10 @@ h2 {
   color: #6f3c79;
 }
 
+.evidence-toggle--low-slope.is-available {
+  color: #0d6674;
+}
+
 .evidence-toggle--forestry.is-available {
   color: #286b40;
 }
@@ -490,6 +494,11 @@ h2 {
 .map-legend__item .map-legend__commonage {
   background: rgba(155, 106, 166, 0.58);
   border-color: #4f2458;
+}
+
+.map-legend__item .map-legend__low-slope {
+  background: rgba(56, 183, 198, 0.62);
+  border-color: #0d6674;
 }
 
 .map-legend__item .map-legend__forestry {
@@ -1251,6 +1260,10 @@ td:nth-child(2) {
     border-top: 1px solid var(--line);
     display: grid;
     grid-template-columns: 1fr 1fr;
+  }
+
+  .evidence-toggle--low-slope {
+    grid-column: 1 / -1;
   }
 
   .evidence-toggle {

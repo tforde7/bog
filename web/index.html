@@ -21,7 +21,7 @@
       href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
       crossorigin=""
     />
-    <link rel="stylesheet" href="./styles.css?v=2026-08-03-overview-v2" />
+    <link rel="stylesheet" href="./styles.css?v=2026-08-03-low-slope-overlay" />
   </head>
   <body>
     <a class="skip-link" href="#candidate-list">Skip to candidate list</a>
@@ -107,6 +107,15 @@
             </label>
             <div class="map-switcher__evidence" aria-label="Selected candidate overlays">
               <label
+                class="evidence-toggle evidence-toggle--low-slope"
+                id="low-slope-toggle-label"
+                title="Select a candidate to show 0–15% slope bog"
+              >
+                <input id="low-slope-toggle" type="checkbox" disabled />
+                <span aria-hidden="true"></span>
+                Low slope
+              </label>
+              <label
                 class="evidence-toggle evidence-toggle--commonage"
                 id="commonage-toggle-label"
                 title="Select a candidate with mapped commonage"
@@ -131,6 +140,10 @@
             <div class="map-legend__item">
               <span class="map-legend__candidate"></span>
               Candidate title
+            </div>
+            <div class="map-legend__item" id="low-slope-legend" hidden>
+              <span class="map-legend__low-slope"></span>
+              Bog at 0–15% slope
             </div>
             <div class="map-legend__item" id="commonage-legend" hidden>
               <span class="map-legend__commonage"></span>
@@ -238,7 +251,9 @@
           >CC BY 4.0</a
         >. Commonage screening uses LPIS 2025 and NPWS Commonage Framework
         Plan geometry; forestry screening uses the DAFM Private Forest Estate
-        2025. These overlays are screening evidence, not legal determinations.
+        2025. Low-slope overlays follow the 30 m Copernicus screening grid.
+        These overlays are screening evidence, not legal determinations or
+        survey measurements.
       </p>
       <p>
         <a
@@ -260,6 +275,6 @@
       src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
       crossorigin=""
     ></script>
-    <script src="./app.js?v=2026-08-03-clear-rank" type="module"></script>
+    <script src="./app.js?v=2026-08-03-low-slope-overlay" type="module"></script>
   </body>
 </html>

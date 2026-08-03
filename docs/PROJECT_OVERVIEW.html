@@ -166,6 +166,12 @@ accessible.</p>
   at least 100 hectares of estimated low-slope bog produced the final 295
   candidates.</li>
 
+  <li><strong>Create the low-slope display layer.</strong> The 0–15% result was
+  converted into a polygon overlay by removing cells above 15% from each
+  candidate's screened-bog footprint. The 295 overlays total 54,963.87
+  hectares, just 4.09 hectares less than the raster screening estimate. Their
+  stepped edges reflect the 30-metre raster grid.</li>
+
   <li><strong>Map commonage, forestry, and clear bog.</strong> Current LPIS and
   historic NPWS commonage geometry were combined without double counting.
   Commonage and DAFM private forest were intersected with candidates, clipped
@@ -177,10 +183,10 @@ accessible.</p>
   assessable candidates were within one kilometre, so the resulting access
   layer was recorded but not used in ranking.</li>
 
-  <li><strong>Prepare the atlas.</strong> Candidate boundaries, commonage
-  overlays, and forestry overlays were transformed from EPSG:2157 to WGS 84
-  and exported as GeoJSON. Feature counts, geometry types, and rank order were
-  validated before publication.</li>
+  <li><strong>Prepare the atlas.</strong> Candidate boundaries and the
+  low-slope, commonage, and forestry overlays were transformed from EPSG:2157
+  to WGS 84 and exported as GeoJSON. Feature counts, geometry types, and rank
+  order were validated before publication.</li>
 </ol>
 
 <h2>Main data sources</h2>
@@ -237,7 +243,8 @@ dates, and limitations, is available on the
   survey.</li>
   <li><strong>The slope figures are estimates.</strong> The Copernicus product
   is a 30-metre digital surface model, so trees and structures can affect the
-  result.</li>
+  result. The displayed low-slope boundary follows the stepped edges of that
+  raster grid.</li>
   <li><strong>Commonage and forestry coverage has limits.</strong> Historic
   commonage mapping is not a current legal determination, and the forestry
   layer does not represent every tree-covered area.</li>

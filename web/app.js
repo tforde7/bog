@@ -1,8 +1,10 @@
 const PAGE_SIZE = 25;
-const DATA_VERSION = "2026-08-03-clear-rank";
+const DATA_VERSION = "2026-08-03-low-slope-overlay";
 const DATA_URL = `./data/candidates.geojson?v=${DATA_VERSION}`;
 const COMMONAGE_DATA_URL = `./data/candidate_commonage.geojson?v=${DATA_VERSION}`;
 const FORESTRY_DATA_URL = `./data/candidate_forestry.geojson?v=${DATA_VERSION}`;
+const LOW_SLOPE_DATA_BASE_URL = "./data/low_slope";
+const EVIDENCE_KINDS = ["lowSlope", "commonage", "forestry"];
 const number = new Intl.NumberFormat("en-IE", {
   maximumFractionDigits: 0,
 });
@@ -22,8 +24,10 @@ const state = {
   selectedRank: null,
   selectedLayer: null,
   boundariesVisible: true,
+  lowSlopeBySource: new Map(),
   commonageBySource: new Map(),
   forestryBySource: new Map(),
+  lowSlopeLayer: null,
   commonageLayer: null,
   forestryLayer: null,
 };
@@ -39,10 +43,13 @@ const elements = {
   emptyResults: document.querySelector("#empty-results"),
   clearFilters: document.querySelector("#clear-filters"),
   boundaryToggle: document.querySelector("#boundary-toggle"),
+  lowSlopeToggle: document.querySelector("#low-slope-toggle"),
+  lowSlopeToggleLabel: document.querySelector("#low-slope-toggle-label"),
   commonageToggle: document.querySelector("#commonage-toggle"),
   commonageToggleLabel: document.querySelector("#commonage-toggle-label"),
   forestryToggle: document.querySelector("#forestry-toggle"),
   forestryToggleLabel: document.querySelector("#forestry-toggle-label"),
+  lowSlopeLegend: document.querySelector("#low-slope-legend"),
   commonageLegend: document.querySelector("#commonage-legend"),
   forestryLegend: document.querySelector("#forestry-legend"),
   resetMap: document.querySelector("#reset-map"),
@@ -130,6 +137,24 @@ function forestryStyle() {
   };
 }
 
+function lowSlopeStyle() {
+  return {
+    renderer: canvasRenderer,
+    color: "#0d6674",
+    weight: map.getZoom() >= 13 ? 2.2 : 1.4,
+    opacity: 1,
+    fillColor: "#38b7c6",
+    fillOpacity: 0.62,
+    smoothFactor: 0,
+  };
+}
+
+function evidenceStyle(kind) {
+  if (kind === "lowSlope") return lowSlopeStyle;
+  if (kind === "commonage") return commonageStyle;
+  return forestryStyle;
+}
+
 function candidateFromFeature(feature) {
   const properties = feature.properties;
   return {
@@ -144,6 +169,7 @@ function candidateFromFeature(feature) {
     bogPct: Number(properties.bog_pct),
     bogGeomHa: Number(properties.bog_geom_ha),
     lowSlopePct: Number(properties.low15_pct),
+    lowSlopeHa: Number(properties.low15_ha),
     clearBogHa: Number(properties.clear_bog_ha),
     commonageTitleHa: Number(properties.common_title_ha),
     commonageBogHa: Number(properties.common_bog_ha),
@@ -266,13 +292,26 @@ function removeEvidenceLayer(kind) {
 }
 
 function clearEvidenceLayers() {
-  removeEvidenceLayer("commonage");
-  removeEvidenceLayer("forestry");
-  elements.commonageToggle.checked = false;
-  elements.forestryToggle.checked = false;
+  EVIDENCE_KINDS.forEach(removeEvidenceLayer);
+  EVIDENCE_KINDS.forEach((kind) => {
+    elements[`${kind}Toggle`].checked = false;
+  });
 }
 
 function configureEvidenceToggle(kind, candidate) {
+  if (kind === "lowSlope") {
+    const toggle = elements.lowSlopeToggle;
+    const label = elements.lowSlopeToggleLabel;
+    const available = candidate.lowSlopeHa >= 100;
+    toggle.disabled = !available;
+    toggle.checked = false;
+    label.classList.toggle("is-available", available);
+    label.title = available
+      ? `Show ${hectares.format(candidate.lowSlopeHa)} ha of screened bog classified at 0–15% slope (30 m estimate)`
+      : "No low-slope overlay is available for this candidate";
+    return;
+  }
+
   const isCommonage = kind === "commonage";
   const toggle = elements[`${kind}Toggle`];
   const label = elements[`${kind}ToggleLabel`];
@@ -299,11 +338,31 @@ function configureEvidenceToggle(kind, candidate) {
 
 function updateEvidenceControls(candidate) {
   clearEvidenceLayers();
-  configureEvidenceToggle("commonage", candidate);
-  configureEvidenceToggle("forestry", candidate);
+  EVIDENCE_KINDS.forEach((kind) =>
+    configureEvidenceToggle(kind, candidate),
+  );
 }
 
-function setEvidenceOverlay(kind, visible) {
+async function lowSlopeFeature(candidate) {
+  if (state.lowSlopeBySource.has(candidate.sourceFid)) {
+    return state.lowSlopeBySource.get(candidate.sourceFid);
+  }
+  const geojson = await fetchGeoJson(
+    `${LOW_SLOPE_DATA_BASE_URL}/${candidate.sourceFid}.geojson?v=${DATA_VERSION}`,
+    "Low-slope overlay",
+  );
+  const features = featuresBySource(geojson, "Low-slope overlay");
+  if (features.size !== 1 || !features.has(candidate.sourceFid)) {
+    throw new Error(
+      `Low-slope overlay for source_fid ${candidate.sourceFid} did not contain exactly one matching feature.`,
+    );
+  }
+  const feature = features.get(candidate.sourceFid);
+  state.lowSlopeBySource.set(candidate.sourceFid, feature);
+  return feature;
+}
+
+async function setEvidenceOverlay(kind, visible) {
   removeEvidenceLayer(kind);
   if (!visible || !state.selectedRank) return;
 
@@ -311,12 +370,30 @@ function setEvidenceOverlay(kind, visible) {
     (item) => item.rank === state.selectedRank,
   );
   if (!candidate) return;
-  const feature = state[`${kind}BySource`].get(candidate.sourceFid);
+  let feature;
+  try {
+    feature =
+      kind === "lowSlope"
+        ? await lowSlopeFeature(candidate)
+        : state[`${kind}BySource`].get(candidate.sourceFid);
+  } catch (error) {
+    console.error(error);
+    elements[`${kind}Toggle`].checked = false;
+    elements[`${kind}ToggleLabel`].title =
+      "This overlay could not be loaded. Please refresh and try again.";
+    return;
+  }
   if (!feature) return;
+  if (
+    !elements[`${kind}Toggle`].checked ||
+    state.selectedRank !== candidate.rank
+  ) {
+    return;
+  }
 
   const layer = L.geoJSON(feature, {
     renderer: canvasRenderer,
-    style: kind === "commonage" ? commonageStyle : forestryStyle,
+    style: evidenceStyle(kind),
     interactive: false,
   }).addTo(map);
   state[`${kind}Layer`] = layer;
@@ -406,14 +483,18 @@ function selectCandidate(rank, { source = "list", updateHash = true } = {}) {
 
 function resetSelection() {
   clearEvidenceLayers();
-  for (const kind of ["commonage", "forestry"]) {
+  for (const kind of EVIDENCE_KINDS) {
     const toggle = elements[`${kind}Toggle`];
     const label = elements[`${kind}ToggleLabel`];
     toggle.disabled = true;
     label.classList.remove("is-available");
-    label.title = `Select a candidate with mapped ${
-      kind === "commonage" ? "commonage" : "private forest"
-    }`;
+    const overlayName =
+      kind === "lowSlope"
+        ? "0–15% slope bog"
+        : kind === "commonage"
+          ? "mapped commonage"
+          : "mapped private forest";
+    label.title = `Select a candidate to show ${overlayName}`;
   }
   if (state.selectedLayer) state.selectedLayer.setStyle(baseStyle());
   state.selectedLayer = null;
@@ -437,6 +518,7 @@ function setBasemap(name) {
     streetLayer.addTo(map);
   }
   if (candidateLayer && state.boundariesVisible) candidateLayer.bringToFront();
+  state.lowSlopeLayer?.bringToFront();
   state.commonageLayer?.bringToFront();
   state.forestryLayer?.bringToFront();
   elements.basemapButtons.forEach((button) => {
@@ -467,17 +549,21 @@ function bindControls() {
     state.boundariesVisible = event.currentTarget.checked;
     if (state.boundariesVisible) {
       candidateLayer.addTo(map);
+      state.lowSlopeLayer?.bringToFront();
       state.commonageLayer?.bringToFront();
       state.forestryLayer?.bringToFront();
     } else {
       candidateLayer.removeFrom(map);
     }
   });
+  elements.lowSlopeToggle.addEventListener("change", (event) => {
+    void setEvidenceOverlay("lowSlope", event.currentTarget.checked);
+  });
   elements.commonageToggle.addEventListener("change", (event) =>
-    setEvidenceOverlay("commonage", event.currentTarget.checked),
+    void setEvidenceOverlay("commonage", event.currentTarget.checked),
   );
   elements.forestryToggle.addEventListener("change", (event) =>
-    setEvidenceOverlay("forestry", event.currentTarget.checked),
+    void setEvidenceOverlay("forestry", event.currentTarget.checked),
   );
   elements.resetMap.addEventListener("click", () => {
     resetSelection();
@@ -494,6 +580,7 @@ function bindControls() {
         ? selectedStyle()
         : baseStyle(),
     );
+    state.lowSlopeLayer?.setStyle(lowSlopeStyle());
     state.commonageLayer?.setStyle(commonageStyle());
     state.forestryLayer?.setStyle(forestryStyle());
   });
