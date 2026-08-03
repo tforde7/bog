@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Checkpoint: initial evidence and QA · Bog restoration screening</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --background: #f4f1e8;
+      --surface: #fffdf7;
+      --text: #202721;
+      --muted: #5f6b61;
+      --border: #ced5cb;
+      --accent: #176746;
+      --code: #e8ede6;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --background: #111713;
+        --surface: #18211b;
+        --text: #e7eee8;
+        --muted: #adb9af;
+        --border: #39463d;
+        --accent: #75d4a5;
+        --code: #222e26;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--background);
+      color: var(--text);
+      font: 17px/1.65 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    header {
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+    nav, main {
+      width: min(100% - 32px, 980px);
+      margin-inline: auto;
+    }
+    nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 22px;
+      padding-block: 15px;
+      font-size: 0.9rem;
+    }
+    nav a { font-weight: 650; text-decoration: none; }
+    main {
+      margin-block: 38px 72px;
+      padding: clamp(22px, 5vw, 58px);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: 0 18px 50px rgb(30 50 36 / 8%);
+    }
+    h1, h2, h3 {
+      line-height: 1.2;
+      letter-spacing: -0.025em;
+      text-wrap: balance;
+    }
+    h1 { margin-top: 0; font-size: clamp(2rem, 6vw, 3.5rem); }
+    h2 { margin-top: 2.1em; border-bottom: 1px solid var(--border); padding-bottom: 0.3em; }
+    h3 { margin-top: 1.8em; }
+    a { color: var(--accent); }
+    code {
+      padding: 0.12em 0.35em;
+      border-radius: 5px;
+      background: var(--code);
+      font: 0.9em ui-monospace, SFMono-Regular, Consolas, monospace;
+      overflow-wrap: anywhere;
+    }
+    pre {
+      overflow-x: auto;
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      background: var(--code);
+    }
+    pre code { padding: 0; background: none; overflow-wrap: normal; }
+    .table-wrap { margin-block: 1.5rem; overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+    th, td { padding: 10px 12px; border: 1px solid var(--border); text-align: left; vertical-align: top; }
+    th { background: var(--code); }
+    blockquote {
+      margin-inline: 0;
+      padding-left: 18px;
+      border-left: 4px solid var(--accent);
+      color: var(--muted);
+    }
+    li + li { margin-top: 0.4em; }
+    @media (max-width: 640px) {
+      body { font-size: 16px; }
+      main { width: 100%; margin-block: 0; border-width: 0; border-radius: 0; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <nav aria-label="Documentation">
+      <a href="../../README.html">Overview</a>
+      <a href="../../docs/PROJECT_STATUS.html">Project status</a>
+      <a href="../../docs/data_sources.html">Data sources</a>
+      <a href="../../web/index.html">Candidate atlas</a>
+    </nav>
+  </header>
+  <main>
+<h1>Checkpoint: initial evidence and QA</h1>
+<p>Date: 2026-07-26</p>
+<h2>Purpose</h2>
+<p>Establish a reproducible national starting layer for identifying potential
+raised-bog and blanket-bog restoration land before requesting private-parcel
+geometry.</p>
+<h2>Completed</h2>
+<ul>
+<li>QGIS project created in EPSG:2157 (IRENET95 / Irish Transverse Mercator).</li>
+<li>Project data structure established: raw sources, processed outputs, scripts,
+and documentation.</li>
+<li>2024 Irish Peat Soils Map selected as the primary national peat evidence.</li>
+<li>Processed bog-core evidence created from three map classes: Raised bogs,
+Lowland Atlantic blanket bogs, and Mountain blanket bogs.</li>
+<li>NPWS active raised-bog (7110) polygons compared to the 2024 Raised bogs class.</li>
+</ul>
+<h2>QA result</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Metric</th>
+<th align="right">Result</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>NPWS active raised-bog area assessed</td>
+<td align="right">11,702.76 ha</td>
+</tr>
+<tr>
+<td>Overlap with 2024 Raised bogs class</td>
+<td align="right">9,758.23 ha (83.38%)</td>
+</tr>
+<tr>
+<td>NPWS active raised bog outside the 2024 class</td>
+<td align="right">1,944.53 ha (16.62%)</td>
+</tr>
+</tbody></table></div>
+<p>The comparison is an agreement and confidence check only. NPWS overlap is not
+used as an eligibility requirement, so potentially restorable land is not
+discarded merely because it is absent from one dataset.</p>
+<h2>Repository scope</h2>
+<p>The repository includes the QGIS project, scripts, documentation, and processed
+evidence/QA outputs. Original downloaded datasets remain local in <code>data/raw/</code>
+and are documented in <code>docs/data_sources.csv</code> rather than stored in Git.</p>
+<h2>Next stage</h2>
+<p>Create connectivity-aware bog clusters that retain small fragments when their
+combined nearby bog area reaches the project threshold, while separating truly
+isolated low-area fragments from the parcel-request envelope.</p>
+
+  </main>
+</body>
+</html>
