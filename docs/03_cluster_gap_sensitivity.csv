@@ -1,0 +1,4 @@
+maximum_interpatch_gap_m,cluster_count,clusters_at_least_100ha,core_hectares_at_least_100ha,core_hectares_below_100ha,method_note
+100,3454,709,1022525.18,50310.37,Pieces are linked when their closest edges are no more than this distance apart; areas are unbuffered core-bog area.
+250,2373,622,1034093.38,38742.15,Pieces are linked when their closest edges are no more than this distance apart; areas are unbuffered core-bog area.
+500,1322,447,1048341.59,24493.92,Pieces are linked when their closest edges are no more than this distance apart; areas are unbuffered core-bog area.

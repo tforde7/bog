@@ -1,11 +1,21 @@
 # Original data downloads are reproducible from docs/data_sources.csv.
 data/raw/
+data/processed/
 
 # QGIS and GeoPackage runtime artefacts.
 *.qgz~
 *.qgs~
 *.gpkg-wal
 *.gpkg-shm
+*.gpkg-journal
+scripts/__pycache__/
+
+# Keep final deliverables, but not local artifact builders and previews.
+outputs/**/node_modules
+outputs/**/build_*.mjs
+outputs/**/*_preview.png
+outputs/**/*.inspect.ndjson
+.DS_Store
 
 # Keep the locally supplied reference report out of the public project repository.
 BBRP23_Prioritisation_of_Blanket_bog_(WP5)Final20.05..2025 (003).pdf
