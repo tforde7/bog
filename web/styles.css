@@ -996,6 +996,15 @@ td:nth-child(2) {
   max-width: 52rem;
 }
 
+.process-list .process-list__result {
+  color: var(--peat-700);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.045em;
+  margin-top: 0.8rem;
+  text-transform: uppercase;
+}
+
 .source-list {
   border-top: 1px solid var(--line);
 }

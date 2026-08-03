@@ -121,50 +121,66 @@ presented in an interactive map. It is a desktop screening exercise, not a
 decision that any site is suitable, available, privately owned, or legally
 accessible.</p>
 
-<h2>How the shortlist was produced</h2>
+<h2>How the QGIS layers became a shortlist</h2>
 <ol>
-  <li><strong>Map the starting bog area.</strong> The 2024 Irish Peat Soils Map
-  was used to identify raised bog, lowland Atlantic blanket bog, and mountain
-  blanket bog. National Parks and Wildlife Service habitat mapping was used as
-  an independent sense-check.</li>
+  <li><strong>Set up the national project.</strong> QGIS was set to Irish
+  Transverse Mercator (EPSG:2157). Source coordinate systems were checked and
+  temporary repaired copies were used where geometry validation was needed.</li>
 
-  <li><strong>Remove known constraints.</strong> Mapped State land and land
-  within Special Areas of Conservation and Natural Heritage Areas were removed
-  from the search area. This identified land outside those mapped categories;
-  it did not prove private ownership.</li>
+  <li><strong>Create the bog-core layer.</strong> An expression selected raised
+  bog, lowland Atlantic blanket bog, and mountain blanket bog from the 2024
+  Irish Peat Soils Map. The selection was written to a new national vector
+  layer while retaining bog type.</li>
 
-  <li><strong>Match the remaining bog to land-title boundaries.</strong> Tailte
-  Éireann cadastral mapping was used to divide the search area into freehold
-  title units. Of the national title dataset, 249,269 titles had some
-  positive-area overlap with the screened bog.</li>
+  <li><strong>Check the starting evidence.</strong> The raised-bog portion was
+  intersected with NPWS active raised-bog habitat mapping. Calculated areas
+  showed 83.38% overlap. This was a quality check, not an eligibility
+  filter.</li>
 
-  <li><strong>Keep only large bog holdings.</strong> Titles containing more
-  than 100 hectares of screened bog were retained. This reduced the list to
-  397 titles.</li>
+  <li><strong>Subtract known constraints.</strong> Repaired copies of PRA and
+  LDA State assets, SAC boundaries, and NHA boundaries were removed using
+  sequential Difference operations. Only overlapping geometry was cut away,
+  producing the screened-bog layer.</li>
 
-  <li><strong>Screen for gentler ground.</strong> Copernicus GLO-30 elevation
-  data was used to estimate slope at 30-metre resolution. A title qualified if
-  it contained at least 100 hectares of screened bog with a slope between
-  0% and 15%, inclusive. This produced the final 295 candidates.</li>
+  <li><strong>Prepare efficient query geometry.</strong> Three large multipart
+  screened-bog features were validated and converted to 21,520 indexed
+  single-part polygons. An area reconciliation retained 623,851 hectares.</li>
 
-  <li><strong>Identify mapped commonage and forestry.</strong> Current LPIS
-  commonage records, historic NPWS commonage mapping, and the DAFM private
-  forest estate were overlaid on the candidates. Across the shortlist,
-  26,235 hectares of screened bog lay outside the mapped commonage and
-  private-forest areas. This remainder is described as “clear bog” for ranking
-  purposes.</li>
+  <li><strong>Extract intersecting cadastral titles.</strong> The query pieces
+  were used to extract local subsets from the national Tailte Éireann freehold
+  and leasehold layers: 249,872 freehold and 1,319 leasehold titles.</li>
 
-  <li><strong>Check basic road proximity.</strong> OpenStreetMap roads and
-  tracks were used for a coarse access screen. Every one of the 284 candidates
-  with at least 0.01 hectares of clear bog was within one kilometre of a mapped
-  road or track, so this test did not help distinguish between candidates and
-  was not added to the ranking.</li>
+  <li><strong>Calculate title-level bog area.</strong> Each freehold title was
+  intersected with screened bog. Full-title area, screened-bog area, bog
+  percentage, and a leasehold-overlap flag were calculated. Boundary-only
+  contacts were omitted, leaving 249,269 positive-area titles. Filtering for
+  more than 100 hectares of screened bog produced 397 titles.</li>
 
-  <li><strong>Publish the shortlist.</strong> The web atlas orders all 295
-  candidates from largest to smallest clear-bog area. A candidate can be
-  selected to centre the map, inspect its boundary, switch between street and
-  satellite imagery, and display mapped commonage or forestry overlaps where
-  present.</li>
+  <li><strong>Build the slope raster.</strong> Twenty-seven Copernicus GLO-30
+  tiles were assembled as a virtual mosaic, projected to EPSG:2157, clipped to
+  the 397-title extent at 30-metre resolution, and converted to percent slope
+  using the Zevenbergen–Thorne method.</li>
+
+  <li><strong>Measure low-slope bog.</strong> A 0–15% inclusive raster mask was
+  sampled only within each title's exact screened-bog footprint. Filtering for
+  at least 100 hectares of estimated low-slope bog produced the final 295
+  candidates.</li>
+
+  <li><strong>Map commonage, forestry, and clear bog.</strong> Current LPIS and
+  historic NPWS commonage geometry were combined without double counting.
+  Commonage and DAFM private forest were intersected with candidates, clipped
+  for display, unioned, and subtracted from screened bog. The remaining 26,235
+  hectares is described as “clear bog.”</li>
+
+  <li><strong>Check access proximity.</strong> Each clear-bog geometry was
+  measured to the nearest eligible OpenStreetMap road or track. All 284
+  assessable candidates were within one kilometre, so the resulting access
+  layer was recorded but not used in ranking.</li>
+
+  <li><strong>Prepare the atlas.</strong> Candidate boundaries, commonage
+  overlays, and forestry overlays were transformed from EPSG:2157 to WGS 84
+  and exported as GeoJSON. Feature counts, geometry types, and rank order were
+  validated before publication.</li>
 </ol>
 
 <h2>Main data sources</h2>
