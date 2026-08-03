@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Project overview · Bog restoration screening</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --background: #f4f1e8;
+      --surface: #fffdf7;
+      --text: #202721;
+      --muted: #5f6b61;
+      --border: #ced5cb;
+      --accent: #176746;
+      --code: #e8ede6;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --background: #111713;
+        --surface: #18211b;
+        --text: #e7eee8;
+        --muted: #adb9af;
+        --border: #39463d;
+        --accent: #75d4a5;
+        --code: #222e26;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--background);
+      color: var(--text);
+      font: 17px/1.65 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    header {
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+    nav, main {
+      width: min(100% - 32px, 980px);
+      margin-inline: auto;
+    }
+    nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 22px;
+      padding-block: 15px;
+      font-size: 0.9rem;
+    }
+    nav a { font-weight: 650; text-decoration: none; }
+    main {
+      margin-block: 38px 72px;
+      padding: clamp(22px, 5vw, 58px);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: 0 18px 50px rgb(30 50 36 / 8%);
+    }
+    h1, h2, h3 {
+      line-height: 1.2;
+      letter-spacing: -0.025em;
+      text-wrap: balance;
+    }
+    h1 { margin-top: 0; font-size: clamp(2rem, 6vw, 3.5rem); }
+    h2 { margin-top: 2.1em; border-bottom: 1px solid var(--border); padding-bottom: 0.3em; }
+    h3 { margin-top: 1.8em; }
+    a { color: var(--accent); }
+    code {
+      padding: 0.12em 0.35em;
+      border-radius: 5px;
+      background: var(--code);
+      font: 0.9em ui-monospace, SFMono-Regular, Consolas, monospace;
+      overflow-wrap: anywhere;
+    }
+    pre {
+      overflow-x: auto;
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      background: var(--code);
+    }
+    pre code { padding: 0; background: none; overflow-wrap: normal; }
+    .table-wrap { margin-block: 1.5rem; overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+    th, td { padding: 10px 12px; border: 1px solid var(--border); text-align: left; vertical-align: top; }
+    th { background: var(--code); }
+    blockquote {
+      margin-inline: 0;
+      padding-left: 18px;
+      border-left: 4px solid var(--accent);
+      color: var(--muted);
+    }
+    li + li { margin-top: 0.4em; }
+    @media (max-width: 640px) {
+      body { font-size: 16px; }
+      main { width: 100%; margin-block: 0; border-width: 0; border-radius: 0; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <nav aria-label="Documentation">
+      <a href="../README.html">Repository</a>
+      <a href="../docs/PROJECT_OVERVIEW.html">Project overview</a>
+      <a href="../docs/data_sources.html">Data sources</a>
+      <a href="../web/index.html">Candidate atlas</a>
+    </nav>
+  </header>
+  <main>
+<h1>Finding large bog-restoration candidates in Ireland</h1>
+<p>This project used national mapping to create a practical shortlist of large
+land-title areas that may merit further investigation for bog restoration.
+It began with mapped bog and peat, removed several unsuitable categories, and
+then ranked the remaining candidates by the amount of relatively unobstructed
+bog they contain.</p>
+
+<p>The result is a shortlist of <strong>295 candidate title areas</strong>,
+presented in an interactive map. It is a desktop screening exercise, not a
+decision that any site is suitable, available, privately owned, or legally
+accessible.</p>
+
+<h2>How the shortlist was produced</h2>
+<ol>
+  <li><strong>Map the starting bog area.</strong> The 2024 Irish Peat Soils Map
+  was used to identify raised bog, lowland Atlantic blanket bog, and mountain
+  blanket bog. National Parks and Wildlife Service habitat mapping was used as
+  an independent sense-check.</li>
+
+  <li><strong>Remove known constraints.</strong> Mapped State land and land
+  within Special Areas of Conservation and Natural Heritage Areas were removed
+  from the search area. This identified land outside those mapped categories;
+  it did not prove private ownership.</li>
+
+  <li><strong>Match the remaining bog to land-title boundaries.</strong> Tailte
+  Éireann cadastral mapping was used to divide the search area into freehold
+  title units. Of the national title dataset, 249,269 titles had some
+  positive-area overlap with the screened bog.</li>
+
+  <li><strong>Keep only large bog holdings.</strong> Titles containing more
+  than 100 hectares of screened bog were retained. This reduced the list to
+  397 titles.</li>
+
+  <li><strong>Screen for gentler ground.</strong> Copernicus GLO-30 elevation
+  data was used to estimate slope at 30-metre resolution. A title qualified if
+  it contained at least 100 hectares of screened bog with a slope between
+  0% and 15%, inclusive. This produced the final 295 candidates.</li>
+
+  <li><strong>Identify mapped commonage and forestry.</strong> Current LPIS
+  commonage records, historic NPWS commonage mapping, and the DAFM private
+  forest estate were overlaid on the candidates. Across the shortlist,
+  26,235 hectares of screened bog lay outside the mapped commonage and
+  private-forest areas. This remainder is described as “clear bog” for ranking
+  purposes.</li>
+
+  <li><strong>Check basic road proximity.</strong> OpenStreetMap roads and
+  tracks were used for a coarse access screen. Every one of the 284 candidates
+  with at least 0.01 hectares of clear bog was within one kilometre of a mapped
+  road or track, so this test did not help distinguish between candidates and
+  was not added to the ranking.</li>
+
+  <li><strong>Publish the shortlist.</strong> The web atlas orders all 295
+  candidates from largest to smallest clear-bog area. A candidate can be
+  selected to centre the map, inspect its boundary, switch between street and
+  satellite imagery, and display mapped commonage or forestry overlaps where
+  present.</li>
+</ol>
+
+<h2>Main data sources</h2>
+<div class="table-wrap"><table>
+  <thead>
+    <tr>
+      <th>Source</th>
+      <th>How it was used</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Irish Peat Soils Map 2024</td>
+      <td>The main national evidence for the starting bog area.</td>
+    </tr>
+    <tr>
+      <td>National Parks and Wildlife Service</td>
+      <td>Habitat quality checks, SAC and NHA exclusions, and historic commonage mapping.</td>
+    </tr>
+    <tr>
+      <td>LDA and Property Registration Authority State-asset mapping</td>
+      <td>Known State-land screening.</td>
+    </tr>
+    <tr>
+      <td>Tailte Éireann cadastral and townland mapping</td>
+      <td>Anonymous freehold and leasehold title boundaries and location context.</td>
+    </tr>
+    <tr>
+      <td>Copernicus DEM GLO-30</td>
+      <td>National 30-metre elevation data used to estimate slope.</td>
+    </tr>
+    <tr>
+      <td>DAFM LPIS 2025 and private forest estate 2025</td>
+      <td>Current mapped commonage and private-forestry screening.</td>
+    </tr>
+    <tr>
+      <td>OpenStreetMap extract dated 2 August 2026</td>
+      <td>Coarse proximity to mapped vehicle roads and access tracks.</td>
+    </tr>
+  </tbody>
+</table></div>
+
+<p>A complete audit register, including providers, download links, licences,
+dates, and limitations, is available on the
+<a href="data_sources.html">data sources page</a>.</p>
+
+<h2>How to interpret the results</h2>
+<ul>
+  <li><strong>“Clear bog” is a mapping term used by this project.</strong> It
+  means screened bog outside the mapped commonage/private-forest union. It
+  does not mean the land is physically clear, unencumbered, or available.</li>
+  <li><strong>The boundaries are reference data.</strong> They do not identify
+  owners or replace a Landdirect title search, legal review, or boundary
+  survey.</li>
+  <li><strong>The slope figures are estimates.</strong> The Copernicus product
+  is a 30-metre digital surface model, so trees and structures can affect the
+  result.</li>
+  <li><strong>Commonage and forestry coverage has limits.</strong> Historic
+  commonage mapping is not a current legal determination, and the forestry
+  layer does not represent every tree-covered area.</li>
+  <li><strong>Road proximity is not access permission.</strong> It says nothing
+  about road condition, a usable entrance, ownership of an approach, or the
+  right to cross land.</li>
+  <li><strong>Desktop screening cannot establish restoration potential.</strong>
+  Drainage, erosion, vegetation, hydrology, peat condition, current land use,
+  planning constraints, and stakeholder interest still require investigation.</li>
+</ul>
+
+<h2>Recommended next stage</h2>
+<p>The atlas is best treated as a prioritised list for further due diligence.
+The leading candidates should be checked against current aerial imagery and
+Landdirect records, followed by legal-title review, site access checks,
+ecological and hydrological assessment, and field verification. Source
+datasets—particularly statutory designations—should be refreshed before any
+formal decision or publication.</p>
+
+  </main>
+</body>
+</html>
