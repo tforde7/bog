@@ -1,7 +1,8 @@
 const PAGE_SIZE = 25;
-const DATA_URL = "./data/candidates.geojson";
-const COMMONAGE_DATA_URL = "./data/candidate_commonage.geojson";
-const FORESTRY_DATA_URL = "./data/candidate_forestry.geojson";
+const DATA_VERSION = "2026-08-03-07a";
+const DATA_URL = `./data/candidates.geojson?v=${DATA_VERSION}`;
+const COMMONAGE_DATA_URL = `./data/candidate_commonage.geojson?v=${DATA_VERSION}`;
+const FORESTRY_DATA_URL = `./data/candidate_forestry.geojson?v=${DATA_VERSION}`;
 const number = new Intl.NumberFormat("en-IE", {
   maximumFractionDigits: 0,
 });
