@@ -38,7 +38,7 @@ rm -f "${CANDIDATE_TEMP}" "${COMMONAGE_TEMP}" "${FORESTRY_TEMP}"
   -sql "
     SELECT
       geom,
-      rank,
+      web_rank AS rank,
       source_fid,
       county_nam AS county,
       CAST(ROUND(ST_X(ST_PointOnSurface(geom))) AS INTEGER) AS itm_easting,
@@ -56,8 +56,15 @@ rm -f "${CANDIDATE_TEMP}" "${COMMONAGE_TEMP}" "${FORESTRY_TEMP}"
       clear_bog_ha,
       common_flag,
       forest_flag
-    FROM candidate_commonage_forestry_metrics
-    ORDER BY rank
+    FROM (
+      SELECT
+        *,
+        ROW_NUMBER() OVER (
+          ORDER BY clear_bog_ha DESC, source_fid ASC
+        ) AS web_rank
+      FROM candidate_commonage_forestry_metrics
+    )
+    ORDER BY web_rank
   " \
   -t_srs EPSG:4326 \
   -lco RFC7946=YES \
@@ -69,9 +76,23 @@ rm -f "${CANDIDATE_TEMP}" "${COMMONAGE_TEMP}" "${FORESTRY_TEMP}"
   "${INPUT}" \
   -dialect SQLITE \
   -sql "
-    SELECT geom, rank, source_fid, title_overlap_ha, bog_overlap_ha
-    FROM candidate_commonage_overlay
-    ORDER BY rank
+    SELECT
+      overlay.geom,
+      ranked.web_rank AS rank,
+      overlay.source_fid,
+      overlay.title_overlap_ha,
+      overlay.bog_overlap_ha
+    FROM candidate_commonage_overlay AS overlay
+    JOIN (
+      SELECT
+        source_fid,
+        ROW_NUMBER() OVER (
+          ORDER BY clear_bog_ha DESC, source_fid ASC
+        ) AS web_rank
+      FROM candidate_commonage_forestry_metrics
+    ) AS ranked
+      ON overlay.source_fid = ranked.source_fid
+    ORDER BY ranked.web_rank
   " \
   -t_srs EPSG:4326 \
   -lco RFC7946=YES \
@@ -83,9 +104,23 @@ rm -f "${CANDIDATE_TEMP}" "${COMMONAGE_TEMP}" "${FORESTRY_TEMP}"
   "${INPUT}" \
   -dialect SQLITE \
   -sql "
-    SELECT geom, rank, source_fid, title_overlap_ha, bog_overlap_ha
-    FROM candidate_forestry_overlay
-    ORDER BY rank
+    SELECT
+      overlay.geom,
+      ranked.web_rank AS rank,
+      overlay.source_fid,
+      overlay.title_overlap_ha,
+      overlay.bog_overlap_ha
+    FROM candidate_forestry_overlay AS overlay
+    JOIN (
+      SELECT
+        source_fid,
+        ROW_NUMBER() OVER (
+          ORDER BY clear_bog_ha DESC, source_fid ASC
+        ) AS web_rank
+      FROM candidate_commonage_forestry_metrics
+    ) AS ranked
+      ON overlay.source_fid = ranked.source_fid
+    ORDER BY ranked.web_rank
   " \
   -t_srs EPSG:4326 \
   -lco RFC7946=YES \
@@ -106,6 +141,10 @@ invalid_clear_bog="$(jq '[.features[] | select(
   .properties.clear_bog_ha < -0.000001 or
   .properties.clear_bog_ha > .properties.bog_geom_ha + 0.000001
 )] | length' "${CANDIDATE_TEMP}")"
+clear_bog_sorted="$(jq '
+  [.features[].properties.clear_bog_ha]
+  == ([.features[].properties.clear_bog_ha] | sort | reverse)
+' "${CANDIDATE_TEMP}")"
 
 if [[ "${feature_count}" != "295" || "${rank_count}" != "295" ]]; then
   echo "Candidate count/rank validation failed: ${feature_count} features, ${rank_count} ranks." >&2
@@ -131,6 +170,10 @@ if [[ "${invalid_clear_bog}" != "0" ]]; then
   echo "Found ${invalid_clear_bog} candidates with invalid clear_bog_ha values." >&2
   exit 1
 fi
+if [[ "${clear_bog_sorted}" != "true" ]]; then
+  echo "Candidate clear-bog ordering validation failed." >&2
+  exit 1
+fi
 
 mv "${CANDIDATE_TEMP}" "${CANDIDATE_OUTPUT}"
 mv "${COMMONAGE_TEMP}" "${COMMONAGE_OUTPUT}"
@@ -138,6 +181,7 @@ mv "${FORESTRY_TEMP}" "${FORESTRY_OUTPUT}"
 
 echo "Candidate web-data export complete"
 echo "Features: ${feature_count}"
+echo "Ranking: clear_bog_ha descending, source_fid ascending for ties"
 echo "Commonage overlays: ${commonage_count}"
 echo "Forestry overlays: ${forestry_count}"
 echo "CRS: RFC 7946 WGS 84 (EPSG:4326)"

@@ -308,7 +308,8 @@ A final candidate workbook has also been produced:
 
 A static candidate atlas has been prepared in `web/` for GitHub Pages:
 
-- all **295** candidates are listed in the same rank order as the workbook;
+- all **295** candidates are ranked in descending `clear_bog_ha` order, with
+  `source_fid` used only as a deterministic tie-breaker;
 - the list supports county/text filtering, keyboard selection, and pagination;
 - selecting a row or boundary centres the map on the exact title geometry and
   highlights it;
