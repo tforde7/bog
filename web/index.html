@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Explore 295 screened bog-restoration candidate title boundaries across Ireland."
+    />
+    <meta name="theme-color" content="#153e35" />
+    <title>Bog Candidate Atlas</title>
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      crossorigin=""
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#candidate-list">Skip to candidate list</a>
+
+    <header class="masthead">
+      <div class="masthead__eyebrow">
+        <span class="masthead__mark" aria-hidden="true"></span>
+        National screening atlas · Ireland
+      </div>
+      <div class="masthead__body">
+        <div>
+          <h1>Bog Candidate Atlas</h1>
+          <p class="masthead__intro">
+            A spatial index of 295 mapped freehold titles containing at least
+            100 hectares of screened bog on 0–15% terrain.
+          </p>
+        </div>
+        <dl class="masthead__metrics" aria-label="Atlas summary">
+          <div>
+            <dt>Candidates</dt>
+            <dd id="candidate-total">295</dd>
+          </div>
+          <div>
+            <dt>Screened bog</dt>
+            <dd>62,024 <span>ha</span></dd>
+          </div>
+          <div>
+            <dt>Method</dt>
+            <dd><span>30 m screening</span></dd>
+          </div>
+        </dl>
+      </div>
+    </header>
+
+    <main class="atlas-shell">
+      <section class="map-panel" aria-labelledby="map-title">
+        <div class="map-panel__heading">
+          <div>
+            <p class="section-kicker">Spatial view</p>
+            <h2 id="map-title">Candidate boundaries</h2>
+          </div>
+          <button class="map-reset" id="reset-map" type="button">
+            View all
+          </button>
+        </div>
+
+        <div class="map-frame">
+          <div
+            id="map"
+            role="region"
+            aria-label="Interactive map of candidate title boundaries"
+          ></div>
+
+          <div class="map-switcher" aria-label="Map display controls">
+            <div class="map-switcher__group" aria-label="Basemap">
+              <button
+                class="map-switcher__button is-active"
+                type="button"
+                data-basemap="street"
+                aria-pressed="true"
+              >
+                Map
+              </button>
+              <button
+                class="map-switcher__button"
+                type="button"
+                data-basemap="satellite"
+                aria-pressed="false"
+              >
+                Satellite
+              </button>
+            </div>
+            <label class="boundary-toggle">
+              <input id="boundary-toggle" type="checkbox" checked />
+              <span aria-hidden="true"></span>
+              Boundaries
+            </label>
+          </div>
+
+          <div class="map-legend" aria-hidden="true">
+            <span></span>
+            Candidate title
+          </div>
+
+          <div class="map-status" id="map-status" role="status">
+            Loading candidate boundaries…
+          </div>
+        </div>
+
+        <aside class="selection-card" id="selection-card" aria-live="polite">
+          <div class="selection-card__empty">
+            <span>Selection</span>
+            <p>Choose a candidate from the list or directly on the map.</p>
+          </div>
+        </aside>
+      </section>
+
+      <section class="list-panel" id="candidate-list" aria-labelledby="list-title">
+        <div class="list-panel__heading">
+          <div>
+            <p class="section-kicker">Ranked register</p>
+            <h2 id="list-title">Final candidates</h2>
+          </div>
+          <p><strong id="visible-count">295</strong> shown</p>
+        </div>
+
+        <div class="filters" role="search">
+          <label class="search-field">
+            <span class="sr-only">Search candidates</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                d="m21 21-4.35-4.35m2.35-5.65a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z"
+              />
+            </svg>
+            <input
+              id="search-input"
+              type="search"
+              placeholder="Search county, rank or coordinate"
+              autocomplete="off"
+            />
+          </label>
+          <label class="county-filter">
+            <span class="sr-only">Filter by county</span>
+            <select id="county-select">
+              <option value="">All counties</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Rank</th>
+                <th scope="col">County</th>
+                <th scope="col">ITM coordinate</th>
+                <th scope="col">Title</th>
+                <th scope="col">Screened bog</th>
+                <th scope="col">Low slope</th>
+              </tr>
+            </thead>
+            <tbody id="candidate-table-body"></tbody>
+          </table>
+          <div class="empty-results" id="empty-results" hidden>
+            <p>No candidates match those filters.</p>
+            <button type="button" id="clear-filters">Clear filters</button>
+          </div>
+        </div>
+
+        <nav class="pagination" aria-label="Candidate pages">
+          <button id="previous-page" type="button" aria-label="Previous page">
+            <span aria-hidden="true">←</span> Previous
+          </button>
+          <p id="page-status">Page 1 of 12</p>
+          <button id="next-page" type="button" aria-label="Next page">
+            Next <span aria-hidden="true">→</span>
+          </button>
+        </nav>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>
+        Screening evidence only—not ownership, legal-boundary or engineering
+        advice. Candidate geometry © Tailte Éireann, licensed
+        <a
+          href="https://creativecommons.org/licenses/by/4.0/"
+          target="_blank"
+          rel="noreferrer"
+          >CC BY 4.0</a
+        >.
+      </p>
+      <p>
+        <a
+          href="https://www.tailte.ie/en/registration/document-library/mapping-guidelines/registration_mapping_guide_11.pdf"
+          target="_blank"
+          rel="noreferrer"
+          >Landdirect coordinate-search guide</a
+        >
+      </p>
+    </footer>
+
+    <noscript>
+      <p class="noscript">
+        This atlas requires JavaScript to render its map and candidate list.
+      </p>
+    </noscript>
+
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      crossorigin=""
+    ></script>
+    <script src="./app.js" type="module"></script>
+  </body>
+</html>

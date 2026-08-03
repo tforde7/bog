@@ -268,6 +268,25 @@ A final candidate workbook has also been produced:
   totals, filters, field definitions, lookup instructions, provenance, and
   interpretation limitations.
 
+A static candidate atlas has been prepared in `web/` for GitHub Pages:
+
+- all **295** candidates are listed in the same rank order as the workbook;
+- the list supports county/text filtering, keyboard selection, and pagination;
+- selecting a row or boundary centres the map on the exact title geometry and
+  highlights it;
+- all full-detail title boundaries are exported to RFC 7946 GeoJSON in WGS 84
+  by `scripts/06_export_candidate_web_data.sh`;
+- the candidate boundary layer can be switched on and off and remains
+  geographically aligned at every map zoom;
+- OpenStreetMap and Esri World Imagery basemaps are available without a project
+  API key;
+- the generated web GeoJSON contains **295** unique ranks and only
+  `MultiPolygon` geometries, and is approximately **4.4 MB**;
+- desktop and mobile browser checks passed for loading, selection, deep links,
+  filtering, pagination, boundary visibility, satellite switching, and browser
+  console errors;
+- `.github/workflows/pages.yml` publishes the `web/` directory to GitHub Pages.
+
 Candidate sources:
 
 - **Copernicus DEM GLO-30:** reproducible open national coverage at 30 m. It is a digital surface model, so vegetation and structures can bias slope; use it for screening, not final engineering eligibility.
@@ -314,5 +333,6 @@ The persistent 04b and future 04b1/04f GeoPackages can then be added directly th
 
 ## Git
 
-- Git repository was initialised and an initial checkpoint committed/pushed earlier in the project.
+- The complete screening-workflow checkpoint was committed and pushed as
+  `4ff221d` (`Checkpoint candidate screening workflow`).
 - Preserve raw downloaded national data outside Git unless an explicit large-file-data policy is adopted.
